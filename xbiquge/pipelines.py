@@ -10,6 +10,7 @@ import pymysql
 from twisted.enterprise import adbapi
 from pymysql import cursors
 
+
 class XbiqugePipeline(object):
     #定义类初始化动作，包括连接数据库novels及建表
     def __init__(self):
@@ -25,22 +26,25 @@ class XbiqugePipeline(object):
         self.conn = pymysql.connect(**dbparams)
         self.cursor = self.conn.cursor()
         self._sql = None
-        self.name_novel = "shenzhenhzsh"   #此处为小说的英文或拼音名，此名也是小说存储表文件名。
-        self.url_firstchapter = "https://www.86zw.cc/32/32914/12930036.html"  #此处为小说的第一章节链接地址。
-        self.name_txt = "./novels/深圳合租生活"   #此处为小说的中文名称，输出文件以此命名。
+        self.name_novel = ''
 
     #爬虫开始
-    def open_spider(self,spider): 
-        self.createtable()  #爬虫开始时先初始化小说存储表
+    def open_spider(self, spider): 
+        #self.createtable()  #爬虫开始时先初始化小说存储表
         return
 
     #建表
-    def createtable(self):
-        self.cursor.execute("drop table if exists "+ self.name_novel)  
-        self.cursor.execute("create table " + self.name_novel + " (id int unsigned auto_increment not null primary key, url varchar(80) not null, preview_page varchar(80), next_page varchar(80), content TEXT not null) charset=utf8mb4")
+    def createtable(self,name_novel):
+        self.cursor.execute("drop table if exists "+ name_novel)  
+        self.cursor.execute("create table " + name_novel + " (id int unsigned auto_increment not null primary key, url varchar(80) not null, preview_page varchar(80), next_page varchar(80), content TEXT not null) charset=utf8mb4")
         return
 
     def process_item(self, item, spider):
+        if self.name_novel == '':
+            self.name_novel = item['name']
+            self.url_firstchapter = item['url_firstchapter']
+            self.name_txt = item['name_txt']
+        
         self.cursor.execute(self.sql, (item['url'], item['preview_page'], item['next_page'], item['content']))
         self.conn.commit()
         return item
@@ -64,7 +68,9 @@ class XbiqugePipeline(object):
         start_time=time.time()  #获取提取小说内容程序运行的起始时间
         f = open(self.name_txt+".txt", mode='w', encoding='utf-8')   #写方式打开小说名称加txt组成的文件
         for i in range(counts):
+            #print(i)
             sql_c = "select content from " + self.name_novel + " where url=" + url_c  #组合获取小说章节内容的sql命令。此处需要修改数据库文件名称
+            #print(sql_c)
             self.cursor.execute(sql_c)
             record_content_c2a0=self.cursor.fetchall()[0][0]  #获取小说章节内容
             record_content=record_content_c2a0.replace(u'\xa0', u'')  #消除特殊字符\xc2\xa0

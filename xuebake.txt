@@ -1,3 +1,0 @@
-        self.name_novel = "xuebake"   #此处为小说的英文或拼音名，此名也是小说存储表文件名。
-        self.url_firstchapter = "http://www.xbiquge.la/42/42319/19042305.html"  #此处为小说的第一章节链接地址。
-        self.name_txt = "学霸的科幻世界"   #此处为小说的中文名称，输出文件以此命名。
